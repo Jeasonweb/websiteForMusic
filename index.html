@@ -1,0 +1,236 @@
+<!--
+	作者：Jeason_zhang888@163.com
+	时间：2017-03-28
+	描述：使用 api 做个播放器
+	http://v5.pc.duomi.com/search-ajaxsearch-searchall?kw=关键字&pi=页码&pz=每页音乐数
+-->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>==多米音乐播放器==</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<meta content="text/html; charset=utf-8" http-equiv="Content-Type" /> 
+		<style type="text/css">
+			*{
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			html{
+				height: 100%;
+			}
+			body{
+				height: 100%;
+			}
+			.wrapper{
+				border:1px solid #ddd;
+				min-height: 100%;
+			}
+			@media only screen and (min-width: 100px) and (max-width: 640px) {
+				.wrapper{
+					width: 100%;
+				}
+				html{
+					font-size: 20px;
+				}
+			}@media only screen and (min-width: 641px) and (max-width: 1280px){
+				.wrapper{
+					width: 80%;
+					margin: 0 auto;
+					min-height: 100%;
+				}
+				html{
+					font-size: 20px;
+				}
+			}@media only screen and (min-width:1281px) {
+				.wrapper{
+					width: 1024px;					
+					min-height: 100%;
+					margin: 0 auto;
+				
+				}
+				html{
+					font-size: 20px;
+				}
+			}
+			.left{
+				width: 30%;				
+				float: left;
+				min-height: 100%;
+			}
+			.main{
+				width: 70%;
+				border-left:1px solid #ddd;
+				float: right;
+				min-height: 100%;
+			}
+			.left audio{
+				width: 80%;
+				margin:0.5rem auto;				
+				height: 4rem;
+				border-bottom: 1px solid #ddd;
+			}
+			.main input{
+				    width: 80%;
+				    margin: .5rem 10%;
+				    border-radius: 0.2rem;
+				    outline: none;
+				    border: 1px solid #ddd;
+				    height: 2rem;
+				    line-height: 1.6rem;
+				    padding: .2rem 2%;
+			}
+			ul{
+				list-style: none;
+				border: 1px solid #ddd;
+				min-height: 100%;
+			}
+			.albumList li,.musicList li{
+				height: 3rem;
+				border-bottom: 1px solid #ddd;
+				line-height: 2rem;
+				padding-bottom: 0.5rem;
+			}
+			.albumList li img,.musicList li img{
+				width: 2rem;
+				line-height: 2rem;
+				margin: 0.5rem 0.5rem 0;
+				vertical-align: baseline;
+			}
+			.albumList>li:last-child,.musicList>li:last-child{
+				border-bottom: 0;
+			}
+			h3{
+				font-weight: 500;
+				font-size: 1rem;
+				padding-left: .5rem;
+			}
+			.playList li{
+				height: 3rem;
+				padding-left: 0.5rem;
+				border-bottom: 1px solid #ddd;
+			}
+			.playList li span{
+				height: 1.3rem;
+				line-height: 1.3rem;
+			}
+			
+			.playList li p{
+				height: 1.7rem;
+				line-height: 1.7rem;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrapper">
+			<div class="left">
+				<audio src="" id='myAudio'>Your Browser doesn't support video Element! </audio>
+				<h3>专辑列表</h3>
+				<ul class="albumList">
+					
+				</ul>
+				<h3>音乐家列表</h3>
+				<ul class="musicList">
+					
+				</ul>
+			</div>
+			<div class="main">
+				<input type="text"  placeholder="请输入要搜索的音乐名字" id="searchInput"/>
+				<ul class="playList">
+					
+				</ul>
+			</div>
+		</div>		
+	</body>
+</html>
+<script src="js/jquery-1.12.3.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript">
+	
+	//*****************************************
+	// 闪烁的标题栏
+	//*****************************************
+	var isFlashing=true;
+	function flashTitle(){
+		
+		document.title = isFlashing ? "==多米音乐播放器==" : "***多米音乐播放器***";
+		isFlashing =!isFlashing;
+	}
+	window.onload=function(){
+		
+		setInterval(flashTitle,300);	
+	}
+	//自执行函数
+	var index = 1,
+	pageSizeNumber=10;	
+	
+	$(document).ready(function(){
+		getDataFromServer();
+		
+	});
+	$('.playList').on('click','li',function(){
+		var selectedValue=$(this).attr('data-value');
+		selectedValue = (selectedValue.split('#'))[0];
+		$('#myAudio').attr('src',selectedValue);
+		document.getElementById('myAudio').play();
+		
+	})
+	function getDataFromServer(){
+		var kw=$('#searchInput').val();
+		kw||(kw='love');
+		postDataFromClient(kw,index,function(jsonData){
+			console.log(jsonData);
+			var albums = jsonData.albums;
+			var artists = jsonData.artists;
+			var tracks =jsonData.tracks;
+			var albumsStr = '';
+			for(var i=0;i<albums.length;i++){
+				var album = albums[i];
+				albumsStr += '<li data-value="'+album.artists[0].id+'"><img src="' + album.cover + '"/><span>' + album.name + '</span><span>'+album.artists[0].name+'</span></li>';
+			}
+			
+			var artistStr = '';
+			for(var i=0;i<artists.length;i++){
+				var artist = artists[i];
+				artistStr += '<li><img src="' + artist.portrait + '"/><span>' + artist.name + '</span></li>';
+			}
+			
+			var trackList = '';
+			for(var i=0;i<tracks.length;i++){
+				var track = tracks[i];
+				trackList += '<li data-value="'+track.medias[0].p2purl+'#'+track.artists[0].id+'"><span>'+track.title+'</span><p>'+track.artists[0].name+'</p></li>';				
+				
+			}
+			$('.albumList').html(albumsStr);
+			$('.musicList').html(artistStr);
+			$('.playList').html(trackList);
+			index++;
+			
+			
+		},function(){
+			alert('网络异常');
+		});
+		
+		
+	}
+	
+	
+	
+	$('#searchInput').on('change',function(){
+		index=1;
+		getDataFromServer();		
+	})
+	//从服务器中通过get方法获取数据
+	function postDataFromClient(kw, index,successFunction,failFunction) {
+			    $.ajax({
+			        type: "post",
+			        url: "common.php",
+			        data:{kw:kw,index:index},
+			        async: true,
+			        dataType: "json",
+			        error: failFunction,
+			        success: successFunction
+			    });
+	}
+	
+</script>
